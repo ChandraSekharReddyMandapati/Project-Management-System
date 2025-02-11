@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/registration.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+    <title>Registration Page</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 500px;
+            padding: 20px;
+            background-color: #f7f7f7;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h3 class="title">Register</h3>
+            <form class="form-horizontal" action="." method="post">{% csrf_token %}
+                <div class="form-group">
+                    <label>User Name</label>
+                    <input type="text" class="form-control" name="username" placeholder="User Name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email ID</label>
+                    <input type="email" class="form-control" name="email" placeholder="Email Address" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" name="password" placeholder="Password" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" class="form-control" name="confirm_password" placeholder="Confirm Password" required>
+                </div>
+                <h4 class="sub-title">Personal Information</h4>
+                <div class="form-group">
+                    <label>Phone No.</label>
+                    <input type="text" class="form-control" name="phone" placeholder="Phone Number" required>
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <select class="form-control" name="city" required>
+                        <option value="AP">Andhrapradesh</option>
+                        <option value="Telangana">Telangana</option>
+                    </select>
+                </div>
+                <div class="check-terms">
+                    <input type="checkbox" class="checkbox" name="terms" required>
+                    <span class="check-label">I agree to the terms</span>
+                </div>
+                <span class="signin-link">Already have an account? Click here to <a href="{% url 'login' %}">Login</a></span>
+                <button type="submit" class="btn signup btn-primary">Create Account</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

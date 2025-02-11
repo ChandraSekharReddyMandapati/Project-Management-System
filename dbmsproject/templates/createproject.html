@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <title>{% if item %}Edit Project{% else %}Create Project{% endif %}</title>
+    <style>
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+        }
+
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #fff;
+            border-bottom: 1px solid #d4d4d4;
+        }
+
+        .autocomplete-items div:hover {
+            background-color: #e9e9e9;
+        }
+
+        .autocomplete-active {
+            background-color: DodgerBlue !important;
+            color: #ffffff;
+        }
+
+        .selected-item {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px;
+            background-color: #007bff;
+            color: #ffffff;
+            border-radius: 3px;
+        }
+
+        .selected-item span {
+            margin-left: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <p class="display-6"><i class="fa-solid fa-circle-plus" style="color: #74C0FC;"></i> {% if item %}Edit Project{% else %}Create Project{% endif %}</p>
+    <div class="container-fluid border">
+        <p class="display-7"><i class="fa-solid fa-circle-info"></i>Enter Information</p>
+        <form method="POST" action=".">{% csrf_token %}
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">Projectname</span>
+                <input type="text" class="form-control" placeholder="Name" name="projectname" value="{% if item %}{{ item.projectname }}{% endif %}" required>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">Start Date</span>
+                <input type="date" class="form-control" name="start_date" value="{% if item %}{{ item.start_date|date:'Y-m-d' }}{% endif %}" required>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">End Date</span>
+                <input type="date" class="form-control" name="end_date" value="{% if item %}{{ item.end_date|date:'Y-m-d' }}{% endif %}" required>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">Project Manager</span>
+                <input type="text" class="form-control" id="projectmanager_search" placeholder="Search for project manager" value="{% if item and item.projectmanager %}{{ item.projectmanager.name }}{% endif %}">
+                <input type="hidden" name="projectmanager" id="projectmanager_id" value="{% if item and item.projectmanager %}{{ item.projectmanager.id }}{% endif %}">
+                <div id="autocomplete-list" class="autocomplete-items"></div>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">Team Members</span>
+                <input type="text" class="form-control" id="teammember_search" placeholder="Search for team members">
+                <div id="teammember-autocomplete-list" class="autocomplete-items"></div>
+                <div id="selected-teammembers">
+                    {% if item %}
+                        {% for member in item.teammembers.all %}
+                            <div class="selected-item">{{ member.name }}<span data-id="{{ member.id }}">x</span>
+                                <input type="hidden" name="teammembers" value="{{ member.id }}">
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">Categories</span>
+                <select name="categories" class="form-control" required>
+                    <option value="">---</option>
+                    <option value="Webdevelopment" {% if item and item.categories == 'Webdevelopment' %}selected{% endif %}>Webdevelopment</option>
+                    <option value="Appdevelopment" {% if item and item.categories == 'Appdevelopment' %}selected{% endif %}>Appdevelopment</option>
+                    <option value="Ios" {% if item and item.categories == 'Ios' %}selected{% endif %}>Ios</option>
+                </select>
+            </div>
+            <div class="input-group mb-3">
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Leave a comment here" name="comments" id="floatingTextarea2" style="height: 100px" required>{% if item %}{{ item.comments }}{% endif %}</textarea>
+                    <label for="floatingTextarea2">Comments</label>
+                </div>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">Status</span>
+                <select name="status" class="form-control" required>
+                    <option value="">---</option>
+                    <option value="pending" {% if item and item.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="ongoing" {% if item and item.status == 'ongoing' %}selected{% endif %}>Ongoing</option>
+                    <option value="completed" {% if item and item.status == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            <div class="input-group mb-3">
+                <button type="submit" class="btn btn-outline-primary">Save Info</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        // Project manager search and autocomplete
+        document.getElementById('projectmanager_search').addEventListener('input', function () {
+            const query = this.value;
+            const resultsContainer = document.getElementById('autocomplete-list');
+            resultsContainer.innerHTML = '';
+            if (query.length > 1) {
+                fetch(`/search_team_members/?q=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(item => {
+                            const resultItem = document.createElement('div');
+                            resultItem.textContent = item.name;
+                            resultItem.dataset.id = item.id;
+                            resultItem.addEventListener('click', function () {
+                                document.getElementById('projectmanager_search').value = this.textContent;
+                                document.getElementById('projectmanager_id').value = this.dataset.id;
+                                resultsContainer.innerHTML = '';
+                            });
+                            resultsContainer.appendChild(resultItem);
+                        });
+                    });
+            }
+        });
+    
+        // Team members search and autocomplete
+        document.getElementById('teammember_search').addEventListener('input', function () {
+            const query = this.value;
+            const resultsContainer = document.getElementById('teammember-autocomplete-list');
+            resultsContainer.innerHTML = '';
+            if (query.length > 1) {
+                fetch(`/search_team_members/?q=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(item => {
+                            const resultItem = document.createElement('div');
+                            resultItem.textContent = item.name;
+                            resultItem.dataset.id = item.id;
+                            resultItem.addEventListener('click', function () {
+                                addTeamMember(this.dataset.id, this.textContent);
+                                resultsContainer.innerHTML = '';
+                            });
+                            resultsContainer.appendChild(resultItem);
+                        });
+                    });
+            }
+        });
+    
+        function addTeamMember(id, name) {
+            const selectedContainer = document.getElementById('selected-teammembers');
+            const selectedItem = document.createElement('div');
+            selectedItem.classList.add('selected-item');
+            selectedItem.textContent = name;
+            const removeIcon = document.createElement('span');
+            removeIcon.textContent = 'x';
+            removeIcon.addEventListener('click', function () {
+                selectedContainer.removeChild(selectedItem);
+            });
+            selectedItem.appendChild(removeIcon);
+            selectedContainer.appendChild(selectedItem);
+    
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'teammembers';
+            hiddenInput.value = id;
+            selectedItem.appendChild(hiddenInput);
+        }
+    </script>
+</body>
+</html>    
